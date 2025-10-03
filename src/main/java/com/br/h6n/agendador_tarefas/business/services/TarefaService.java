@@ -1,6 +1,7 @@
 package com.br.h6n.agendador_tarefas.business.services;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.stereotype.Service;
 
@@ -17,7 +18,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class TarefaService {
     private final TarefaRepository tarefaRepository;
-    private final TarefaConverter usuarioConverter;
+    private final TarefaConverter tarefaConverter;
     private final JwtUtil jwtUtil;
 
     public TarefaDTO gravarTarefa(String token, TarefaDTO tarefaDTO) {
@@ -25,8 +26,19 @@ public class TarefaService {
         tarefaDTO.setEmailUsuario(email);
         tarefaDTO.setDataCriacao(LocalDateTime.now());
         tarefaDTO.setStatusNotificacaoEnum(StatusNotificacaoEnum.PENDENTE);
-        TarefaEntity tarefaEntity = usuarioConverter.paraTarefaEntity(tarefaDTO);
+        TarefaEntity tarefaEntity = tarefaConverter.paraTarefaEntity(tarefaDTO);
 
-        return usuarioConverter.paraTarefaDTO(tarefaRepository.save(tarefaEntity));
+        return tarefaConverter.paraTarefaDTO(tarefaRepository.save(tarefaEntity));
     }
+
+   public List<TarefaDTO> buscaTarefasAgendasPorPeriodo(LocalDateTime inicio, LocalDateTime fim) {
+       return tarefaConverter.paraListaTarefaDTO(tarefaRepository.findByDataEventoBetween(inicio, fim));
+   }
+
+   public List<TarefaDTO> buscaTarefasPorEmail(String token) {
+       String email = jwtUtil.extractUsername(token.substring(7));
+       List<TarefaEntity> listaTarefas = tarefaRepository.findByEmailUsuario(email);
+
+       return tarefaConverter.paraListaTarefaDTO(listaTarefas);
+   }
 }
